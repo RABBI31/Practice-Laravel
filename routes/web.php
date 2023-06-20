@@ -2,7 +2,9 @@
 use App\Models\User;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Profile\ProfileAvatarController;
+use App\Http\Controllers\Auth\LoginProviderController;
 use Illuminate\Support\Facades\Route;
+use Laravel\Socialite\Facades\Socialite;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,3 +38,23 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+
+
+Route::get('/auth/redirect', function () {
+    return Socialite::driver('github')->redirect();
+});
+
+Route::get('/auth/callback', function () {
+    $user = Socialite::driver('github')->stateless()->user();
+$user=User::updateorCreate(['email'=> $user->email],
+[
+'name'      =>$user->name,
+'password'  =>'password',
+]);
+Auth::login($user);
+return redirect('/dashboard');
+});
+
+Route::get('login/github', [LoginProviderController::class, 'redirectToProvider']);
+Route::get('login/github/callback', [LoginProviderController::class, 'handleProviderCallback']);
